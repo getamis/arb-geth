@@ -321,6 +321,7 @@ type BlobPool struct {
 	eventScope event.SubscriptionScope // Event scope to track and mass unsubscribe on termination
 
 	queuedTxFeed event.Feed // Event feed to send out new queued tx events on pool inclusion
+	localTxFeed  event.Feed // Event feed to send out new local tx events on pool inclusion
 
 	lock sync.RWMutex // Mutex protecting the pool during reorg handling
 }
@@ -1481,6 +1482,12 @@ func (p *BlobPool) SubscribeTransactions(ch chan<- core.NewTxsEvent) event.Subsc
 // starts sending event to the given channel.
 func (p *BlobPool) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
 	return p.eventScope.Track(p.queuedTxFeed.Subscribe(ch))
+}
+
+// SubscribePendingLocalTxsEvent registers a subscription of PendingLocalTxsEvent and
+// starts sending event to the given channel.
+func (p *BlobPool) SubscribePendingLocalTxsEvent(ch chan<- core.PendingLocalTxsEvent) event.Subscription {
+	return p.eventScope.Track(p.localTxFeed.Subscribe(ch))
 }
 
 // Nonce returns the next nonce of an account, with all transactions executable

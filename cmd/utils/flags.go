@@ -326,6 +326,11 @@ var (
 		Value:    ethconfig.Defaults.TxPool.Rejournal,
 		Category: flags.TxPoolCategory,
 	}
+	TxPoolBroadcastPendingLocalTxFlag = &cli.DurationFlag{
+		Name:  "txpool.broadcastpendinglocaltx",
+		Usage: "Time interval to broadcast the pending local transaction",
+		Value: ethconfig.Defaults.TxPool.BroadcastPendingLocalTx,
+	}
 	TxPoolPriceLimitFlag = &cli.Uint64Flag{
 		Name:     "txpool.pricelimit",
 		Usage:    "Minimum gas price tip to enforce for acceptance into the pool",
@@ -1507,6 +1512,9 @@ func setTxPool(ctx *cli.Context, cfg *legacypool.Config) {
 	}
 	if ctx.IsSet(TxPoolRejournalFlag.Name) {
 		cfg.Rejournal = ctx.Duration(TxPoolRejournalFlag.Name)
+	}
+	if ctx.IsSet(TxPoolBroadcastPendingLocalTxFlag.Name) {
+		cfg.BroadcastPendingLocalTx = ctx.Duration(TxPoolBroadcastPendingLocalTxFlag.Name)
 	}
 	if ctx.IsSet(TxPoolPriceLimitFlag.Name) {
 		cfg.PriceLimit = ctx.Uint64(TxPoolPriceLimitFlag.Name)
