@@ -143,6 +143,9 @@ type SubPool interface {
 	// SubscribeNewQueuedTxsEvent subscribes to new queued transaction events
 	SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription
 
+	// SubscribePendingLocalTxsEvent subscribes to pending local transaction events
+	SubscribePendingLocalTxsEvent(ch chan<- core.PendingLocalTxsEvent) event.Subscription
+
 	// Nonce returns the next nonce of an account, with all transactions executable
 	// by the pool already applied on top.
 	Nonce(addr common.Address) uint64
