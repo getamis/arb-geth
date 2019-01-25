@@ -129,6 +129,8 @@ type Config struct {
 	Journal   string           // Journal of local transactions to survive node restarts
 	Rejournal time.Duration    // Time interval to regenerate the local transaction journal
 
+	BroadcastPendingLocalTx time.Duration // Time interval to broadcast the local transaction
+
 	PriceLimit uint64 // Minimum gas price to enforce for acceptance into the pool
 	PriceBump  uint64 // Minimum price bump percentage to replace an already existing transaction (nonce)
 
@@ -144,6 +146,8 @@ type Config struct {
 var DefaultConfig = Config{
 	Journal:   "transactions.rlp",
 	Rejournal: time.Hour,
+
+	BroadcastPendingLocalTx: 5 * time.Minute,
 
 	PriceLimit: 1,
 	PriceBump:  10,
@@ -163,6 +167,10 @@ func (config *Config) sanitize() Config {
 	if conf.Rejournal < time.Second {
 		log.Warn("Sanitizing invalid txpool journal time", "provided", conf.Rejournal, "updated", time.Second)
 		conf.Rejournal = time.Second
+	}
+	if conf.BroadcastPendingLocalTx < time.Second {
+		log.Warn("Sanitizing invalid txpool broadcast local tx time", "provided", conf.BroadcastPendingLocalTx, "updated", time.Second)
+		conf.BroadcastPendingLocalTx = time.Second
 	}
 	if conf.PriceLimit < 1 {
 		log.Warn("Sanitizing invalid txpool price limit", "provided", conf.PriceLimit, "updated", DefaultConfig.PriceLimit)
@@ -211,7 +219,8 @@ type LegacyPool struct {
 	signer      types.Signer
 	mu          sync.RWMutex
 
-	queuedTxFeed event.Feed
+	queuedTxFeed       event.Feed
+	pendingLocalTxFeed event.Feed
 
 	currentHead   atomic.Pointer[types.Header] // Current head of the blockchain
 	currentState  *state.StateDB               // Current state in the blockchain head
@@ -353,6 +362,10 @@ func (pool *LegacyPool) loop() {
 
 	// Notify tests that the init phase is done
 	close(pool.initDoneCh)
+
+	pendingLocalTxs := time.NewTicker(pool.config.BroadcastPendingLocalTx)
+	defer pendingLocalTxs.Stop()
+
 	for {
 		select {
 		// Handle pool shutdown
@@ -399,6 +412,23 @@ func (pool *LegacyPool) loop() {
 				}
 				pool.mu.Unlock()
 			}
+
+		case <-pendingLocalTxs.C:
+			pool.mu.RLock()
+			lTxs := types.Transactions{}
+			for addr, list := range pool.pending {
+				// grab local transactions
+				if !pool.locals.contains(addr) {
+					continue
+				}
+
+				lTxs = append(lTxs, list.Flatten()...)
+			}
+			pool.mu.RUnlock()
+
+			if len(lTxs) != 0 {
+				go pool.pendingLocalTxFeed.Send(core.PendingLocalTxsEvent{Txs: lTxs})
+			}
 		}
 	}
 }
@@ -437,6 +467,12 @@ func (pool *LegacyPool) SubscribeTransactions(ch chan<- core.NewTxsEvent, reorgs
 // starts sending event to the given channel.
 func (pool *LegacyPool) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
 	return pool.queuedTxFeed.Subscribe(ch)
+}
+
+// SubscribePendingLocalTxsEvent registers a subscription of NewTxsEvent and
+// starts sending event to the given channel.
+func (pool *LegacyPool) SubscribePendingLocalTxsEvent(ch chan<- core.PendingLocalTxsEvent) event.Subscription {
+	return pool.pendingLocalTxFeed.Subscribe(ch)
 }
 
 // SetGasTip updates the minimum gas tip required by the transaction pool for a
