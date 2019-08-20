@@ -555,6 +555,10 @@ func (a *APIBackend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subs
 	return a.b.SubscribeNewTxsEvent(ch)
 }
 
+func (a *APIBackend) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return a.b.SubscribeNewQueuedTxsEvent(ch)
+}
+
 // Filter API
 func (a *APIBackend) BloomStatus() (uint64, uint64) {
 	sections, _, _ := a.b.bloomIndexer.Sections()
