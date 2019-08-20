@@ -730,6 +730,10 @@ func (a *APIBackend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subs
 	return a.b.SubscribeNewTxsEvent(ch)
 }
 
+func (a *APIBackend) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return a.b.SubscribeNewQueuedTxsEvent(ch)
+}
+
 // Filter API
 
 func (a *APIBackend) GetLogs(ctx context.Context, hash common.Hash, number uint64) ([][]*types.Log, error) {
