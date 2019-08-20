@@ -417,3 +417,7 @@ func (b *backendMock) ArchiveFallbackClient(_ uint64) types.FallbackClient {
 func (b *backendMock) SyncProgressMap(ctx context.Context) map[string]interface{} {
 	return nil
 }
+
+func (b *backendMock) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return nil
+}
