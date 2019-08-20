@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -446,4 +447,14 @@ func (api *DebugAPI) SetTrieFlushInterval(interval string) error {
 // GetTrieFlushInterval gets the current value of in-memory trie flush interval
 func (api *DebugAPI) GetTrieFlushInterval() string {
 	return api.eth.blockchain.GetTrieFlushInterval().String()
+}
+
+// GetTotalDifficulty returns the total difficulty of the specified block.
+func (api *DebugAPI) GetTotalDifficulty(blockHash common.Hash) *big.Int {
+	return api.eth.blockchain.GetTd(blockHash, api.eth.blockchain.GetBlockByHash(blockHash).NumberU64())
+}
+
+// GetBlockReceipts returns all transaction receipts of the specified block.
+func (api *DebugAPI) GetBlockReceipts(blockHash common.Hash) types.Receipts {
+	return api.eth.blockchain.GetReceiptsByHash(blockHash)
 }
