@@ -24,6 +24,8 @@ type Backend struct {
 	config     *Config
 	chainDb    ethdb.Database
 
+	queuedTxFeed event.Feed
+
 	txFeed event.Feed
 	scope  event.SubscriptionScope
 
@@ -33,8 +35,8 @@ type Backend struct {
 	shutdownTracker *shutdowncheck.ShutdownTracker
 
 	chanTxs      chan *types.Transaction
-	chanClose    chan struct{} //close coroutine
-	chanNewBlock chan struct{} //create new L2 block unless empty
+	chanClose    chan struct{} // close coroutine
+	chanNewBlock chan struct{} // create new L2 block unless empty
 
 	filterSystem *filters.FilterSystem
 }
@@ -93,6 +95,10 @@ func (b *Backend) EnqueueL2Message(ctx context.Context, tx *types.Transaction, o
 
 func (b *Backend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscription {
 	return b.scope.Track(b.txFeed.Subscribe(ch))
+}
+
+func (b *Backend) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return b.scope.Track(b.queuedTxFeed.Subscribe(ch))
 }
 
 // TODO: this is used when registering backend as lifecycle in stack
