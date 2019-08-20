@@ -547,3 +547,8 @@ func (api *DebugAPI) ExecutionWitnessByHash(hash common.Hash) (*stateless.ExtWit
 
 	return result.Witness().ToExtWitness(), nil
 }
+
+// GetBlockReceipts returns all transaction receipts of the specified block.
+func (api *DebugAPI) GetBlockReceipts(blockHash common.Hash) types.Receipts {
+	return api.eth.blockchain.GetReceiptsByHash(blockHash)
+}
