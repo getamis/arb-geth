@@ -460,6 +460,11 @@ func storageRangeAt(st state.Trie, start []byte, maxResult int) (StorageRangeRes
 	return result, nil
 }
 
+// GetTotalDifficulty returns the total difficulty of the specified block.
+func (api *DebugAPI) GetTotalDifficulty(blockHash common.Hash) *big.Int {
+	return api.eth.blockchain.GetTd(blockHash, api.eth.blockchain.GetBlockByHash(blockHash).NumberU64())
+}
+
 // GetModifiedAccountsByNumber returns all accounts that have changed between the
 // two blocks specified. A change is defined as a difference in nonce, balance,
 // code hash, or storage hash.
@@ -602,4 +607,9 @@ func (api *DebugAPI) GetAccessibleState(from, to rpc.BlockNumber) (uint64, error
 		}
 	}
 	return 0, errors.New("no state found")
+}
+
+// GetBlockReceipts returns all transaction receipts of the specified block.
+func (api *DebugAPI) GetBlockReceipts(blockHash common.Hash) types.Receipts {
+	return api.eth.blockchain.GetReceiptsByHash(blockHash)
 }
