@@ -329,6 +329,15 @@ func (api *BlockChainAPI) GetBalance(ctx context.Context, address common.Address
 	return (*hexutil.Big)(b), state.Error()
 }
 
+// GetBalanceByHash returns the amount of wei for the given address in the state of the
+// given block hash. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta
+// block numbers are also allowed.
+// Deprecated: can be replaced by GetBalance
+func (api *BlockChainAPI) GetBalanceByHash(ctx context.Context, address common.Address, blockHash common.Hash) (*hexutil.Big, error) {
+	hash := rpc.BlockNumberOrHashWithHash(blockHash, false)
+	return api.GetBalance(ctx, address, hash)
+}
+
 // AccountResult structs for GetProof
 type AccountResult struct {
 	Address      common.Address  `json:"address"`
@@ -1729,6 +1738,12 @@ func (api *TransactionAPI) GetTransactionReceipt(ctx context.Context, hash commo
 	arbosVersion := types.DeserializeHeaderExtraInformation(header).ArbOSFormatVersion
 	signer := types.MakeSigner(api.b.ChainConfig(), header.Number, header.Time, arbosVersion)
 	return marshalReceipt(ctx, receipt, blockHash, blockNumber, signer, tx, int(index), api.b)
+}
+
+func MarshalReceipt(ctx context.Context, receipt *types.Receipt, blockHash common.Hash, blockNumber uint64, header *types.Header, tx *types.Transaction, txIndex int, backend Backend) (map[string]interface{}, error) {
+	arbosVersion := types.DeserializeHeaderExtraInformation(header).ArbOSFormatVersion
+	signer := types.MakeSigner(backend.ChainConfig(), header.Number, header.Time, arbosVersion)
+	return marshalReceipt(ctx, receipt, blockHash, blockNumber, signer, tx, txIndex, backend)
 }
 
 // marshalReceipt marshals a transaction receipt into a JSON object.
