@@ -314,6 +314,8 @@ type BlobPool struct {
 	discoverFeed event.Feed // Event feed to send out new tx events on pool discovery (reorg excluded)
 	insertFeed   event.Feed // Event feed to send out new tx events on pool inclusion (reorg included)
 
+	queuedTxFeed event.Feed // Event feed to send out new queued tx events on pool inclusion
+
 	lock sync.RWMutex // Mutex protecting the pool during reorg handling
 }
 
@@ -1499,6 +1501,12 @@ func (p *BlobPool) SubscribeTransactions(ch chan<- core.NewTxsEvent, reorgs bool
 	} else {
 		return p.discoverFeed.Subscribe(ch)
 	}
+}
+
+// SubscribeNewQueuedTxsEvent registers a subscription of NewQueuedTxsEvent and
+// starts sending event to the given channel.
+func (p *BlobPool) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return p.queuedTxFeed.Subscribe(ch)
 }
 
 // Nonce returns the next nonce of an account, with all transactions executable
