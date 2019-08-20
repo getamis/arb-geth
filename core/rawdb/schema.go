@@ -135,6 +135,8 @@ var (
 	// (d) State ID lookups, etc.
 	VerklePrefix = []byte("v")
 
+	blockTransferLogsPrefix = []byte("f") // blockTransferLogsPrefix + num (uint64 big endian) + hash -> block transfer logs
+
 	PreimagePrefix = []byte("secure-key-")       // PreimagePrefix + hash -> preimage
 	configPrefix   = []byte("ethereum-config-")  // config prefix for the db
 	genesisPrefix  = []byte("ethereum-genesis-") // genesis state prefix for the db
