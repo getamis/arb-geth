@@ -135,6 +135,8 @@ var (
 	// (d) State ID lookups, etc.
 	VerklePrefix = []byte("v")
 
+	blockTransferLogsPrefix = []byte("f") // blockTransferLogsPrefix + num (uint64 big endian) + hash -> block transfer logs
+
 	PreimagePrefix = []byte("secure-key-")       // PreimagePrefix + hash -> preimage
 	configPrefix   = []byte("ethereum-config-")  // config prefix for the db
 	genesisPrefix  = []byte("ethereum-genesis-") // genesis state prefix for the db
@@ -206,6 +208,11 @@ func blockBodyKey(number uint64, hash common.Hash) []byte {
 // blockReceiptsKey = blockReceiptsPrefix + num (uint64 big endian) + hash
 func blockReceiptsKey(number uint64, hash common.Hash) []byte {
 	return append(append(blockReceiptsPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
+}
+
+// blockTransferLogsKey = blockReceiptsPrefix + num (uint64 big endian) + hash
+func blockTransferLogsKey(number uint64, hash common.Hash) []byte {
+	return append(append(blockTransferLogsPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
 }
 
 // txLookupKey = txLookupPrefix + hash
