@@ -23,6 +23,14 @@ import (
 // NewTxsEvent is posted when a batch of transactions enter the transaction pool.
 type NewTxsEvent struct{ Txs []*types.Transaction }
 
+// NewQueuedTxsEvent is posted when a batch of transactions enter the transaction pool.
+type NewQueuedTxsEvent struct{ Txs []*types.Transaction }
+
+// PendingLogsEvent is posted pre mining and notifies of pending logs.
+type PendingLogsEvent struct {
+	Logs []*types.Log
+}
+
 // RemovedLogsEvent is posted when a reorg happens
 type RemovedLogsEvent struct{ Logs []*types.Log }
 
