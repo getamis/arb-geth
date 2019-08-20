@@ -411,3 +411,7 @@ func (b *backendMock) FallbackClient() types.FallbackClient {
 func (b *backendMock) SyncProgressMap() map[string]interface{} {
 	return nil
 }
+
+func (b *backendMock) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return nil
+}
