@@ -21,6 +21,8 @@ type Backend struct {
 	config     *Config
 	chainDb    ethdb.Database
 
+	queuedTxFeed event.Feed
+
 	txFeed event.Feed
 	scope  event.SubscriptionScope
 
@@ -81,6 +83,10 @@ func (b *Backend) EnqueueL2Message(ctx context.Context, tx *types.Transaction, o
 
 func (b *Backend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.Subscription {
 	return b.scope.Track(b.txFeed.Subscribe(ch))
+}
+
+func (b *Backend) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return b.scope.Track(b.queuedTxFeed.Subscribe(ch))
 }
 
 func (b *Backend) Stack() *node.Node {

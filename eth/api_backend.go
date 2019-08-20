@@ -346,6 +346,10 @@ func (b *EthAPIBackend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) event.S
 	return b.eth.txPool.SubscribeNewTxsEvent(ch)
 }
 
+func (b *EthAPIBackend) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return b.eth.TxPool().SubscribeNewQueuedTxsEvent(ch)
+}
+
 func (b *EthAPIBackend) SyncProgressMap() map[string]interface{} {
 	progress := b.eth.Downloader().Progress()
 	return progress.ToMap()
