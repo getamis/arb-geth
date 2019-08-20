@@ -342,3 +342,7 @@ func (b *backendMock) Engine() consensus.Engine { return nil }
 
 func (b *backendMock) FallbackClient() types.FallbackClient    { return nil }
 func (b *backendMock) SyncProgressMap() map[string]interface{} { return nil }
+
+func (b *backendMock) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return nil
+}
