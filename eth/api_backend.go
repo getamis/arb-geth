@@ -33,6 +33,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/txpool"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/eth/downloader"
 	"github.com/ethereum/go-ethereum/eth/gasprice"
 	"github.com/ethereum/go-ethereum/eth/tracers"
 	"github.com/ethereum/go-ethereum/ethdb"
@@ -348,6 +349,10 @@ func (b *EthAPIBackend) SyncProgressMap() map[string]interface{} {
 
 func (b *EthAPIBackend) SyncProgress() ethereum.SyncProgress {
 	return b.eth.Downloader().Progress()
+}
+
+func (b *EthAPIBackend) Downloader() *downloader.Downloader {
+	return b.eth.Downloader()
 }
 
 func (b *EthAPIBackend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
