@@ -376,6 +376,16 @@ func (p *TxPool) SubscribeTransactions(ch chan<- core.NewTxsEvent, reorgs bool) 
 	return p.subs.Track(event.JoinSubscriptions(subs...))
 }
 
+// SubscribeNewQueuedTxsEvent registers a subscription of NewQueuedTxsEvent and starts sending
+// events to the given channel.
+func (p *TxPool) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	subs := make([]event.Subscription, len(p.subpools))
+	for i, subpool := range p.subpools {
+		subs[i] = subpool.SubscribeNewQueuedTxsEvent(ch)
+	}
+	return p.subs.Track(event.JoinSubscriptions(subs...))
+}
+
 // Nonce returns the next nonce of an account, with all transactions executable
 // by the pool already applied on top.
 func (p *TxPool) Nonce(addr common.Address) uint64 {
