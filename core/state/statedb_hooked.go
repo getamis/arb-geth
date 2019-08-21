@@ -369,3 +369,11 @@ func (s *hookedStateDB) GetSelfDestructs() []common.Address {
 func (s *hookedStateDB) GetCurrentTxLogs() []*types.Log {
 	return s.inner.GetCurrentTxLogs()
 }
+
+func (s *hookedStateDB) AddTransferLog(log *types.TransferLog) {
+	// The inner will modify the log (add fields), so invoke that first
+	s.inner.AddTransferLog(log)
+	if s.hooks.OnTransferLog != nil {
+		s.hooks.OnTransferLog(log)
+	}
+}
