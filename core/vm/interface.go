@@ -140,4 +140,6 @@ type StateDB interface {
 	IntermediateRoot(bool) common.Hash
 
 	Reader() state.Reader
+
+	AddTransferLog(*types.TransferLog)
 }
