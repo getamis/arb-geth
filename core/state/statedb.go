@@ -136,6 +136,9 @@ type StateDB struct {
 	StorageDeleted int
 
 	deterministic bool
+
+	// transferLogs records transfer logs for each transaction.
+	transferLogs map[common.Hash][]*types.TransferLog
 }
 
 // New creates a new state from a given trie.
@@ -161,6 +164,8 @@ func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) 
 		accessList:           newAccessList(),
 		transientStorage:     newTransientStorage(),
 		hasher:               crypto.NewKeccakState(),
+
+		transferLogs: make(map[common.Hash][]*types.TransferLog),
 	}
 	if sdb.snaps != nil {
 		if sdb.snap = sdb.snaps.Snapshot(root); sdb.snap != nil {
@@ -238,6 +243,25 @@ func (s *StateDB) GetLogs(hash common.Hash, blockNumber uint64, blockHash common
 func (s *StateDB) Logs() []*types.Log {
 	var logs []*types.Log
 	for _, lgs := range s.logs {
+		logs = append(logs, lgs...)
+	}
+	return logs
+}
+
+func (self *StateDB) AddTransferLog(transferLog *types.TransferLog) {
+	self.journal.append(addTransferLogChange{txhash: self.thash})
+
+	transferLog.TxHash = self.thash
+	self.transferLogs[self.thash] = append(self.transferLogs[self.thash], transferLog)
+}
+
+func (self *StateDB) GetTransferLogs(hash common.Hash) []*types.TransferLog {
+	return self.transferLogs[hash]
+}
+
+func (self *StateDB) TransferLogs() []*types.TransferLog {
+	var logs []*types.TransferLog
+	for _, lgs := range self.transferLogs {
 		logs = append(logs, lgs...)
 	}
 	return logs
@@ -749,6 +773,8 @@ func (s *StateDB) Copy() *StateDB {
 		preimages:            make(map[common.Hash][]byte, len(s.preimages)),
 		journal:              newJournal(),
 		hasher:               crypto.NewKeccakState(),
+
+		transferLogs: make(map[common.Hash][]*types.TransferLog),
 	}
 	// Copy the dirty states, logs, and preimages
 	for addr := range s.journal.dirties {
@@ -806,6 +832,10 @@ func (s *StateDB) Copy() *StateDB {
 	state.accessList = s.accessList.Copy()
 	state.transientStorage = s.transientStorage.Copy()
 
+	for hash, transferLogs := range s.transferLogs {
+		state.transferLogs[hash] = make([]*types.TransferLog, len(transferLogs))
+		copy(state.transferLogs[hash], transferLogs)
+	}
 	// If there's a prefetcher running, make an inactive copy of it that can
 	// only access data but does not actively preload (since the user will not
 	// know that they need to explicitly terminate an active copy).
