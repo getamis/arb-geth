@@ -202,6 +202,9 @@ type (
 	CaptureArbitrumStorageSetHook = func(key, value common.Hash, depth int, before bool)
 
 	CaptureStylusHostioHook = func(name string, args, outs []byte, startInk, endInk uint64)
+
+	// TransferLogHook is called when a transfer log is emitted.
+	TransferLogHook = func(log *types.TransferLog)
 )
 
 type Hooks struct {
@@ -241,6 +244,8 @@ type Hooks struct {
 	CaptureArbitrumStorageSet CaptureArbitrumStorageSetHook
 	// Stylus: capture hostio invocation
 	CaptureStylusHostio CaptureStylusHostioHook
+
+	OnTransferLog TransferLogHook
 }
 
 // BalanceChangeReason is used to indicate the reason for a balance change, useful
