@@ -117,8 +117,11 @@ func TestTxIndexer(t *testing.T) {
 	}
 	for _, c := range cases {
 		db, _ := rawdb.Open(rawdb.NewMemoryDatabase(), rawdb.OpenOptions{})
-		rawdb.WriteAncientBlocks(db, append([]*types.Block{gspec.ToBlock()}, blocks...), types.EncodeBlockReceiptLists(append([]types.Receipts{{}}, receipts...)))
-
+		tfs := [][]*types.TransferLog{{}}
+		for range blocks {
+			tfs = append(tfs, []*types.TransferLog{})
+		}
+		rawdb.WriteAncientBlocks(db, append([]*types.Block{gspec.ToBlock()}, blocks...), types.EncodeBlockReceiptLists(append([]types.Receipts{{}}, receipts...)), tfs)
 		// Index the initial blocks from ancient store
 		indexer := &txIndexer{
 			limit: 0,
@@ -237,8 +240,11 @@ func TestTxIndexerRepair(t *testing.T) {
 	for _, c := range cases {
 		db, _ := rawdb.Open(rawdb.NewMemoryDatabase(), rawdb.OpenOptions{})
 		encReceipts := types.EncodeBlockReceiptLists(append([]types.Receipts{{}}, receipts...))
-		rawdb.WriteAncientBlocks(db, append([]*types.Block{gspec.ToBlock()}, blocks...), encReceipts)
-
+		tfs := [][]*types.TransferLog{{}}
+		for range blocks {
+			tfs = append(tfs, []*types.TransferLog{})
+		}
+		rawdb.WriteAncientBlocks(db, append([]*types.Block{gspec.ToBlock()}, blocks...), encReceipts, tfs)
 		// Index the initial blocks from ancient store
 		indexer := &txIndexer{
 			limit: c.limit,
@@ -428,7 +434,11 @@ func TestTxIndexerReport(t *testing.T) {
 	for _, c := range cases {
 		db, _ := rawdb.Open(rawdb.NewMemoryDatabase(), rawdb.OpenOptions{})
 		encReceipts := types.EncodeBlockReceiptLists(append([]types.Receipts{{}}, receipts...))
-		rawdb.WriteAncientBlocks(db, append([]*types.Block{gspec.ToBlock()}, blocks...), encReceipts)
+		tfs := [][]*types.TransferLog{{}}
+		for range blocks {
+			tfs = append(tfs, []*types.TransferLog{})
+		}
+		rawdb.WriteAncientBlocks(db, append([]*types.Block{gspec.ToBlock()}, blocks...), encReceipts, tfs)
 
 		// Index the initial blocks from ancient store
 		indexer := &txIndexer{
