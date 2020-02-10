@@ -557,6 +557,7 @@ func WriteHeadBlock(batch ethdb.Batch, block *types.Block) {
 	rawdb.WriteHeadBlockHash(batch, block.Hash())
 	rawdb.WriteHeadFastBlockHash(batch, block.Hash())
 	rawdb.WriteHeadHeaderHash(batch, block.Hash())
+	rawdb.WriteTransferLogs(batch, block.Hash(), block.NumberU64(), nil)
 }
 
 // MustCommit writes the genesis block and state to db, panicking on error.

@@ -35,6 +35,9 @@ const (
 
 	// ChainFreezerReceiptTable indicates the name of the freezer receipts table.
 	ChainFreezerReceiptTable = "receipts"
+
+	// ChainFreezerTransferLogTable indicates the name of the freezer transfer logs table.
+	ChainFreezerTransferLogTable = "transfers"
 )
 
 // chainFreezerNoSnappy configures whether compression is disabled for the ancient-tables.
@@ -44,6 +47,8 @@ var chainFreezerNoSnappy = map[string]bool{
 	ChainFreezerHashTable:    true,
 	ChainFreezerBodiesTable:  false,
 	ChainFreezerReceiptTable: false,
+
+	ChainFreezerTransferLogTable: false,
 }
 
 const (
