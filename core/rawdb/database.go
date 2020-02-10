@@ -525,6 +525,7 @@ func InspectDatabase(db ethdb.Database, keyPrefix, keyStart []byte) error {
 		bloomBits       stat
 		beaconHeaders   stat
 		cliqueSnaps     stat
+		transferLog     stat
 
 		// Les statistic
 		chtTrieNodes   stat
@@ -567,6 +568,8 @@ func InspectDatabase(db ethdb.Database, keyPrefix, keyStart []byte) error {
 			storageTries.Add(size)
 		case bytes.HasPrefix(key, CodePrefix) && len(key) == len(CodePrefix)+common.HashLength:
 			codes.Add(size)
+		case bytes.HasPrefix(key, blockTranferLogsPrefix) && len(key) == (len(blockTranferLogsPrefix)+8+common.HashLength):
+			transferLog.Add(size)
 		case bytes.HasPrefix(key, txLookupPrefix) && len(key) == (len(txLookupPrefix)+common.HashLength):
 			txLookups.Add(size)
 		case bytes.HasPrefix(key, SnapshotAccountPrefix) && len(key) == (len(SnapshotAccountPrefix)+common.HashLength):
@@ -625,6 +628,7 @@ func InspectDatabase(db ethdb.Database, keyPrefix, keyStart []byte) error {
 		{"Key-Value store", "Headers", headers.Size(), headers.Count()},
 		{"Key-Value store", "Bodies", bodies.Size(), bodies.Count()},
 		{"Key-Value store", "Receipt lists", receipts.Size(), receipts.Count()},
+		{"Key-Value store", "Transfer logs", transferLog.Size(), transferLog.Count()},
 		{"Key-Value store", "Difficulties", tds.Size(), tds.Count()},
 		{"Key-Value store", "Block number->hash", numHashPairings.Size(), numHashPairings.Count()},
 		{"Key-Value store", "Block hash->number", hashNumPairings.Size(), hashNumPairings.Count()},
