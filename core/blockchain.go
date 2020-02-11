@@ -115,6 +115,8 @@ const (
 	receiptsCacheLimit = 32
 	txLookupCacheLimit = 1024
 
+	transferLogsCacheLimit = 32
+
 	// BlockChainVersion ensures that an incompatible database forces a resync from scratch.
 	//
 	// Changelog:
@@ -212,7 +214,6 @@ func (c *CacheConfig) triedbConfig(isVerkle bool) *triedb.Config {
 // defaultCacheConfig are the default caching values if none are specified by the
 // user (also used during testing).
 var defaultCacheConfig = &CacheConfig{
-
 	// Arbitrum Config Options
 	// note: some of the defaults are overwritten by nitro side config defaults
 
@@ -304,6 +305,9 @@ type BlockChain struct {
 	txLookupLock  sync.RWMutex
 	txLookupCache *lru.Cache[common.Hash, txLookup]
 
+	transferLogsCache *lru.Cache[common.Hash, []*types.TransferLog]
+
+	wg            sync.WaitGroup
 	quit          chan struct{} // shutdown signal, closed in Stop.
 	stopping      atomic.Bool   // false if chain is running, true when stopped
 	procInterrupt atomic.Bool   // interrupt signaler for block processing
@@ -393,6 +397,8 @@ func NewBlockChainExtended(db ethdb.Database, cacheConfig *CacheConfig, chainCon
 		engine:        engine,
 		vmConfig:      vmConfig,
 		logger:        vmConfig.Tracer,
+
+		transferLogsCache: lru.NewCache[common.Hash, []*types.TransferLog](transferLogsCacheLimit),
 	}
 	bc.hc, err = NewHeaderChain(db, chainConfig, engine, bc.insertStopped)
 	if err != nil {
@@ -1098,6 +1104,7 @@ func (bc *BlockChain) setHeadBeyondRoot(head uint64, time uint64, root common.Ha
 			// removed in the hc.SetHead function.
 			rawdb.DeleteBody(db, hash, num)
 			rawdb.DeleteReceipts(db, hash, num)
+			rawdb.DeleteTransferLogs(db, hash, num)
 		}
 		// Todo(rjl493456442) txlookup, log index, etc
 	}
@@ -1122,6 +1129,7 @@ func (bc *BlockChain) setHeadBeyondRoot(head uint64, time uint64, root common.Ha
 	bc.bodyCache.Purge()
 	bc.bodyRLPCache.Purge()
 	bc.receiptsCache.Purge()
+	bc.transferLogsCache.Purge()
 	bc.blockCache.Purge()
 	bc.txLookupCache.Purge()
 
@@ -1532,6 +1540,10 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 			rawdb.WriteBlock(batch, block)
 			rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receiptChain[i])
 
+			// We don't have transfer logs for fast sync blocks
+			rawdb.WriteMissingTransferLogs(batch, block.Hash(), block.NumberU64())
+			rawdb.WriteTxLookupEntriesByBlock(batch, block) // Always write tx indices for live blocks, we assume they are needed
+
 			// Write everything belongs to the blocks into the database. So that
 			// we can ensure all components of body is completed(body, receipts)
 			// except transaction indexes(will be created once sync is finished).
@@ -1647,6 +1659,7 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 	rawdb.WriteBlock(blockBatch, block)
 	rawdb.WriteReceipts(blockBatch, block.Hash(), block.NumberU64(), receipts)
 	rawdb.WritePreimages(blockBatch, statedb.Preimages())
+	rawdb.WriteTransferLogs(blockBatch, block.Hash(), block.NumberU64(), statedb.TransferLogs())
 	if err := blockBatch.Write(); err != nil {
 		log.Crit("Failed to write block into disk", "err", err)
 	}
