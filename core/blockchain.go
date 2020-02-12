@@ -1247,7 +1247,10 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 			if frozen, _ := bc.db.Ancients(); frozen == 0 {
 				td := bc.genesisBlock.Difficulty()
 				b := bc.genesisBlock
-				tfLogs := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen)
+				tfLogs, err := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen)
+				if err != nil {
+					return 0, err
+				}
 				writeSize, err := rawdb.WriteAncientBlocks(bc.db, []*types.Block{b}, []types.Receipts{nil}, td, tfLogs)
 				size += writeSize
 				if err != nil {
