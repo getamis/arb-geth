@@ -1369,7 +1369,10 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 		if first.NumberU64() == 1 {
 			if frozen, _ := bc.db.Ancients(); frozen == 0 {
 				b := bc.genesisBlock
-				tfLogs := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen)
+				tfLogs, err := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen)
+				if err != nil {
+					return 0, err
+				}
 				writeSize, err := rawdb.WriteAncientBlocks(bc.db, []*types.Block{bc.genesisBlock}, []types.Receipts{nil}, tfLogs)
 				if err != nil {
 					log.Error("Error writing genesis to ancients", "err", err)
