@@ -1539,7 +1539,10 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 		if blockChain[0].NumberU64() == 1 {
 			if frozen, _ := bc.db.Ancients(); frozen == 0 {
 				b := bc.genesisBlock
-				tfLogs := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen)
+				tfLogs, err := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen, false)
+				if err != nil {
+					return 0, err
+				}
 				writeSize, err := rawdb.WriteAncientBlocks(bc.db, []*types.Block{bc.genesisBlock}, []rlp.RawValue{rlp.EmptyList}, [][]*types.TransferLog{tfLogs})
 				if err != nil {
 					log.Error("Error writing genesis to ancients", "err", err)
@@ -1551,7 +1554,10 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 		}
 		tfLogss := [][]*types.TransferLog{}
 		for _, b := range blockChain {
-			tfLogs := rawdb.ReadTransferLogs(bc.db, b.Hash(), b.NumberU64())
+			tfLogs, err := rawdb.ReadTransferLogs(bc.db, b.Hash(), b.NumberU64(), false)
+			if err != nil {
+				return 0, err
+			}
 			tfLogss = append(tfLogss, tfLogs)
 		}
 		// Write all chain data to ancients.
