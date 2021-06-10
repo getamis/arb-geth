@@ -1659,6 +1659,12 @@ func (api *TransactionAPI) GetTransactionReceipt(ctx context.Context, hash commo
 	return marshalReceipt(ctx, receipt, blockHash, blockNumber, signer, tx, int(index), api.b)
 }
 
+func MarshalReceipt(ctx context.Context, receipt *types.Receipt, blockHash common.Hash, blockNumber uint64, header *types.Header, tx *types.Transaction, txIndex int, backend Backend) (map[string]interface{}, error) {
+	arbosVersion := types.DeserializeHeaderExtraInformation(header).ArbOSFormatVersion
+	signer := types.MakeSigner(backend.ChainConfig(), header.Number, header.Time, arbosVersion)
+	return marshalReceipt(ctx, receipt, blockHash, blockNumber, signer, tx, txIndex, backend)
+}
+
 // marshalReceipt marshals a transaction receipt into a JSON object.
 func marshalReceipt(ctx context.Context, receipt *types.Receipt, blockHash common.Hash, blockNumber uint64, signer types.Signer, tx *types.Transaction, txIndex int, backend Backend) (map[string]interface{}, error) {
 	from, _ := types.Sender(signer, tx)
