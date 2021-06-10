@@ -1933,6 +1933,11 @@ func (s *TransactionAPI) GetTransactionReceipt(ctx context.Context, hash common.
 	return marshalReceipt(ctx, receipt, blockHash, blockNumber, signer, tx, int(index), s.b)
 }
 
+func MarshalReceipt(ctx context.Context, receipt *types.Receipt, blockHash common.Hash, blockNumber uint64, header *types.Header, tx *types.Transaction, txIndex int, backend Backend) (map[string]interface{}, error) {
+	signer := types.MakeSigner(backend.ChainConfig(), header.Number, header.Time)
+	return marshalReceipt(ctx, receipt, blockHash, blockNumber, signer, tx, txIndex, backend)
+}
+
 // marshalReceipt marshals a transaction receipt into a JSON object.
 func marshalReceipt(ctx context.Context, receipt *types.Receipt, blockHash common.Hash, blockNumber uint64, signer types.Signer, tx *types.Transaction, txIndex int, backend Backend) (map[string]interface{}, error) {
 	from, _ := types.Sender(signer, tx)
