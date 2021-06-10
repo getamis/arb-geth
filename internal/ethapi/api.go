@@ -1912,8 +1912,12 @@ func (s *TransactionAPI) GetTransactionReceipt(ctx context.Context, hash common.
 	}
 	receipt := receipts[index]
 
-	// Derive the sender.
-	signer := types.MakeSigner(s.b.ChainConfig(), header.Number, header.Time)
+	return ToTransactionReceipt(ctx, s.b, tx, receipt, blockHash, hash, blockNumber, index, header)
+}
+
+func ToTransactionReceipt(ctx context.Context, b Backend, tx *types.Transaction, receipt *types.Receipt, blockHash common.Hash, hash common.Hash, blockNumber uint64, index uint64, header *types.Header) (map[string]interface{}, error) {
+	chainConfig := b.ChainConfig()
+	signer := types.MakeSigner(chainConfig, new(big.Int).SetUint64(blockNumber), header.Time)
 	from, _ := types.Sender(signer, tx)
 
 	fields := map[string]interface{}{
@@ -1931,7 +1935,6 @@ func (s *TransactionAPI) GetTransactionReceipt(ctx context.Context, hash common.
 		"type":              hexutil.Uint(tx.Type()),
 		"effectiveGasPrice": (*hexutil.Big)(receipt.EffectiveGasPrice),
 	}
-
 	// Assign receipt status or post state.
 	if len(receipt.PostState) > 0 && tx.Type() != types.ArbitrumLegacyTxType {
 		fields["root"] = hexutil.Bytes(receipt.PostState)
@@ -1946,14 +1949,14 @@ func (s *TransactionAPI) GetTransactionReceipt(ctx context.Context, hash common.
 	if receipt.ContractAddress != (common.Address{}) {
 		fields["contractAddress"] = receipt.ContractAddress
 	}
-	if s.b.ChainConfig().IsArbitrum() {
+	if b.ChainConfig().IsArbitrum() {
 		fields["gasUsedForL1"] = hexutil.Uint64(receipt.GasUsedForL1)
 
-		header, err := s.b.HeaderByHash(ctx, blockHash)
+		header, err := b.HeaderByHash(ctx, blockHash)
 		if err != nil {
 			return nil, err
 		}
-		if s.b.ChainConfig().IsArbitrumNitro(header.Number) {
+		if b.ChainConfig().IsArbitrumNitro(header.Number) {
 			fields["effectiveGasPrice"] = hexutil.Uint64(header.BaseFee.Uint64())
 			fields["l1BlockNumber"] = hexutil.Uint64(types.DeserializeHeaderExtraInformation(header).L1BlockNumber)
 		} else {
