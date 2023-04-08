@@ -512,7 +512,7 @@ func (a *APIBackend) stateAndHeaderFromHeader(ctx context.Context, header *types
 	reexec := uint64(0)
 	checkLive := false
 	preferDisk := false // preferDisk is ignored in this case
-	statedb, release, err := eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb()).StateAtBlock(ctx, targetBlock, reexec, lastState, lastBlock, checkLive, preferDisk)
+	statedb, release, err := eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb(), a.b.stack).StateAtBlock(ctx, targetBlock, reexec, lastState, lastBlock, checkLive, preferDisk)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to recreate state: %w", err)
 	}
@@ -546,7 +546,7 @@ func (a *APIBackend) StateAtBlock(ctx context.Context, block *types.Block, reexe
 		return nil, nil, types.ErrUseFallback
 	}
 	// DEV: This assumes that `StateAtBlock` only accesses the blockchain and chainDb fields
-	return eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb()).StateAtBlock(ctx, block, reexec, base, nil, checkLive, preferDisk)
+	return eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb(), a.b.stack).StateAtBlock(ctx, block, reexec, base, nil, checkLive, preferDisk)
 }
 
 func (a *APIBackend) StateAtTransaction(ctx context.Context, block *types.Block, txIndex int, reexec uint64) (*core.Message, vm.BlockContext, *state.StateDB, tracers.StateReleaseFunc, error) {
@@ -554,7 +554,7 @@ func (a *APIBackend) StateAtTransaction(ctx context.Context, block *types.Block,
 		return nil, vm.BlockContext{}, nil, nil, types.ErrUseFallback
 	}
 	// DEV: This assumes that `StateAtTransaction` only accesses the blockchain and chainDb fields
-	return eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb()).StateAtTransaction(ctx, block, txIndex, reexec)
+	return eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb(), a.b.stack).StateAtTransaction(ctx, block, txIndex, reexec)
 }
 
 func (a *APIBackend) GetReceipts(ctx context.Context, hash common.Hash) (types.Receipts, error) {
@@ -668,7 +668,7 @@ func (a *APIBackend) SubscribeLogsEvent(ch chan<- []*types.Log) event.Subscripti
 }
 
 func (a *APIBackend) SubscribePendingLogsEvent(ch chan<- []*types.Log) event.Subscription {
-	//Arbitrum doesn't really need pending logs. Logs are published as soon as we know them..
+	// Arbitrum doesn't really need pending logs. Logs are published as soon as we know them..
 	return a.SubscribeLogsEvent(ch)
 }
 
