@@ -430,7 +430,7 @@ func (a *APIBackend) StateAtBlock(ctx context.Context, block *types.Block, reexe
 		return nil, types.ErrUseFallback
 	}
 	// DEV: This assumes that `StateAtBlock` only accesses the blockchain and chainDb fields
-	return eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb()).StateAtBlock(block, reexec, base, checkLive, preferDisk)
+	return eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb(), a.b.stack).StateAtBlock(block, reexec, base, checkLive, preferDisk)
 }
 
 func (a *APIBackend) StateAtTransaction(ctx context.Context, block *types.Block, txIndex int, reexec uint64) (core.Message, vm.BlockContext, *state.StateDB, error) {
@@ -438,7 +438,7 @@ func (a *APIBackend) StateAtTransaction(ctx context.Context, block *types.Block,
 		return nil, vm.BlockContext{}, nil, types.ErrUseFallback
 	}
 	// DEV: This assumes that `StateAtTransaction` only accesses the blockchain and chainDb fields
-	return eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb()).StateAtTransaction(block, txIndex, reexec)
+	return eth.NewArbEthereum(a.b.arb.BlockChain(), a.ChainDb(), a.b.stack).StateAtTransaction(block, txIndex, reexec)
 }
 
 func (a *APIBackend) GetReceipts(ctx context.Context, hash common.Hash) (types.Receipts, error) {
