@@ -148,8 +148,7 @@ func newTable(path string, name string, readMeter metrics.Meter, writeMeter metr
 		meta  *os.File
 	)
 	if readonly {
-		// Will fail if table doesn't exist
-		index, err = openFreezerFileForReadOnly(filepath.Join(path, idxName))
+		index, err = openFreezerFileForAppend(filepath.Join(path, idxName))
 		if err != nil {
 			return nil, err
 		}
@@ -217,11 +216,14 @@ func (t *freezerTable) repair() error {
 		return err
 	}
 	if stat.Size() == 0 {
-		if _, err := t.index.Write(buffer); err != nil {
+		_, err := t.index.Write(buffer)
+		if err != nil {
+			t.logger.Info("fail to write buffer to the file", "name", t.name, "size", stat.Size())
 			return err
 		}
 	}
 	// Ensure the index is a multiple of indexEntrySize bytes
+	t.logger.Info("will trigger the trancation?", "indexEntrySize", indexEntrySize, "size", stat.Size(), "overflow", stat.Size()%indexEntrySize)
 	if overflow := stat.Size() % indexEntrySize; overflow != 0 {
 		truncateFreezerFile(t.index, stat.Size()-overflow) // New file can't trigger this path
 	}

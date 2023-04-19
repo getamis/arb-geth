@@ -199,6 +199,7 @@ func resolveChainFreezerDir(ancient string) string {
 func NewDatabaseWithFreezer(db ethdb.KeyValueStore, ancient string, namespace string, readonly bool) (ethdb.Database, error) {
 	// Create the idle freezer instance
 	frdb, err := newChainFreezer(resolveChainFreezerDir(ancient), namespace, readonly, freezerTableSize, chainFreezerNoSnappy)
+	log.Info("freezer dir", "location", resolveChainFreezerDir(ancient))
 	if err != nil {
 		return nil, err
 	}
@@ -224,12 +225,15 @@ func NewDatabaseWithFreezer(db ethdb.KeyValueStore, ancient string, namespace st
 	// If the genesis hash is empty, we have a new key-value store, so nothing to
 	// validate in this method. If, however, the genesis hash is not nil, compare
 	// it to the freezer content.
-	if kvgenesis, _ := db.Get(headerHashKey(0)); len(kvgenesis) > 0 {
+	kvgenesis, _ := db.Get(headerHashKey(0))
+	log.Info("kvgenesis", "hash", headerHashKey(0), "len(kvgenesis)", len(kvgenesis), "kvgenesis", string(kvgenesis))
+	if len(kvgenesis) > 0 {
 		if frozen, _ := frdb.Ancients(); frozen > 0 {
 			// If the freezer already contains something, ensure that the genesis blocks
 			// match, otherwise we might mix up freezers across chains and destroy both
 			// the freezer and the key-value store.
 			frgenesis, err := frdb.Ancient(chainFreezerHashTable, 0)
+			log.Info("frgenesis", "hash", headerHashKey(0), "frgenesis", string(frgenesis))
 			if err != nil {
 				return nil, fmt.Errorf("failed to retrieve genesis from ancient %v", err)
 			} else if !bytes.Equal(kvgenesis, frgenesis) {

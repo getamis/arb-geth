@@ -116,6 +116,7 @@ func (f *chainFreezer) freeze(db ethdb.KeyValueStore) {
 		}
 		// Retrieve the freezing threshold.
 		hash := ReadHeadBlockHash(nfdb)
+		log.Info("Current full block hash is:", "hash", hash.String())
 		if hash == (common.Hash{}) {
 			log.Debug("Current full block hash unavailable") // new chain, empty database
 			backoff = true
@@ -124,6 +125,11 @@ func (f *chainFreezer) freeze(db ethdb.KeyValueStore) {
 		number := ReadHeaderNumber(nfdb, hash)
 		threshold := atomic.LoadUint64(&f.threshold)
 		frozen := atomic.LoadUint64(&f.frozen)
+		if number != nil {
+			log.Info("Current full block status:", "number", *number, "threshold", threshold, "frozen", frozen)
+		} else {
+			log.Info("Current full block status:", "threshold", threshold, "frozen", frozen)
+		}
 		switch {
 		case number == nil:
 			log.Error("Current full block number unavailable", "hash", hash)
@@ -156,6 +162,7 @@ func (f *chainFreezer) freeze(db ethdb.KeyValueStore) {
 		if limit-first > freezerBatchLimit {
 			limit = first + freezerBatchLimit
 		}
+		log.Info("freeze range", "first", first, "limit", limit)
 		ancients, err := f.freezeRange(nfdb, first, limit)
 		if err != nil {
 			log.Error("Error in block freeze operation", "err", err)
