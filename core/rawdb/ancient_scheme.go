@@ -50,6 +50,14 @@ var chainFreezerNoSnappy = map[string]bool{
 	chainFreezerTransferLogTable: false,
 }
 
+var chainFreezerNoSnappyWithoutTransfers = map[string]bool{
+	chainFreezerHeaderTable:     false,
+	chainFreezerHashTable:       true,
+	chainFreezerBodiesTable:     false,
+	chainFreezerReceiptTable:    false,
+	chainFreezerDifficultyTable: true,
+}
+
 // The list of identifiers of ancient stores.
 var (
 	chainFreezerName = "chain" // the folder name of chain segment ancient store.

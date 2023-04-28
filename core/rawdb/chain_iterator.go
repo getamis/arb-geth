@@ -29,6 +29,51 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
+func InitTransferFreezer(datadir string, db ethdb.Database) error {
+	// If we can't access the freezer or it's empty, abort
+	frozen, err := db.Ancients()
+	if err != nil || frozen == 0 {
+		return err
+	}
+
+	table, err := InitFreezerTransfersTable(resolveChainFreezerDir(datadir))
+	if err != nil {
+		return err
+	}
+	defer table.Close()
+
+	start := time.Now()
+	logged := start.Add(-7 * time.Second) // Unindex during import is fast, don't double log
+	transferLogBlob := []byte(errMissingTransferLogs.Error())
+	op := table.newBatch()
+	for i := uint64(0); i < frozen; {
+		// We read 100K hashes at a time, for a total of 3.2M
+		count := uint64(100_000)
+		if i+count > frozen {
+			count = frozen - i
+		}
+		data, err := db.AncientRange(chainFreezerHashTable, i, count, 32*count)
+		if err != nil {
+			log.Crit("Failed to init database from freezer", "err", err)
+		}
+		for j := range data {
+			number := i + uint64(j)
+			if err := op.AppendRaw(number, transferLogBlob); err != nil {
+				log.Crit("can't append transfer logs", "number", i, "err", err)
+			}
+		}
+		op.commit()
+		i += uint64(len(data))
+		// If we've spent too much time already, notify the user of what we're doing
+		if time.Since(logged) > 8*time.Second {
+			log.Info("Initializing transfers table in freezer", "total", frozen, "number", i, "elapsed", common.PrettyDuration(time.Since(start)))
+			logged = time.Now()
+		}
+	}
+	log.Info("Initialized transfers table in freezer", "blocks", frozen, "elapsed", common.PrettyDuration(time.Since(start)))
+	return nil
+}
+
 // InitDatabaseFromFreezer reinitializes an empty database from a previous batch
 // of frozen ancient blocks. The method iterates over all the frozen blocks and
 // injects into the database the block hash->number mappings.

@@ -196,12 +196,18 @@ func resolveChainFreezerDir(ancient string) string {
 // value data store with a freezer moving immutable chain segments into cold
 // storage. The passed ancient indicates the path of root ancient directory
 // where the chain freezer can be opened.
-func NewDatabaseWithFreezer(db ethdb.KeyValueStore, ancient string, namespace string, readonly bool) (ethdb.Database, error) {
+func NewDatabaseWithFreezer(db ethdb.KeyValueStore, ancient string, namespace string, readonly bool, inInitState bool) (ethdb.Database, error) {
+	tables := chainFreezerNoSnappy
+	if inInitState {
+		tables = chainFreezerNoSnappyWithoutTransfers
+	}
+
 	// Create the idle freezer instance
-	frdb, err := newChainFreezer(resolveChainFreezerDir(ancient), namespace, readonly, freezerTableSize, chainFreezerNoSnappy)
+	frdb, err := newChainFreezer(resolveChainFreezerDir(ancient), namespace, readonly, freezerTableSize, tables)
 	if err != nil {
 		return nil, err
 	}
+
 	// Since the freezer can be stored separately from the user's key-value database,
 	// there's a fairly high probability that the user requests invalid combinations
 	// of the freezer and database. Ensure that we don't shoot ourselves in the foot
@@ -308,12 +314,12 @@ func NewLevelDBDatabase(file string, cache int, handles int, namespace string, r
 // freezer moving immutable chain segments into cold storage. The passed ancient
 // indicates the path of root ancient directory where the chain freezer can be
 // opened.
-func NewLevelDBDatabaseWithFreezer(file string, cache int, handles int, ancient string, namespace string, readonly bool) (ethdb.Database, error) {
+func NewLevelDBDatabaseWithFreezer(file string, cache int, handles int, ancient string, namespace string, readonly bool, inInitState bool) (ethdb.Database, error) {
 	kvdb, err := leveldb.New(file, cache, handles, namespace, readonly)
 	if err != nil {
 		return nil, err
 	}
-	frdb, err := NewDatabaseWithFreezer(kvdb, ancient, namespace, readonly)
+	frdb, err := NewDatabaseWithFreezer(kvdb, ancient, namespace, readonly, inInitState)
 	if err != nil {
 		kvdb.Close()
 		return nil, err
