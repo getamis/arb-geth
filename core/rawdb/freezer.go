@@ -78,6 +78,10 @@ type Freezer struct {
 	closeOnce    sync.Once
 }
 
+func InitFreezerTransfersTable(datadir string) (*freezerTable, error) {
+	return newFreezerTable(datadir, chainFreezerTransferLogTable, false, false)
+}
+
 // NewFreezer creates a freezer instance for maintaining immutable ordered
 // data according to the given parameters.
 //
