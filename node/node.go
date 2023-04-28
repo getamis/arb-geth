@@ -784,11 +784,11 @@ func (n *Node) OpenDatabaseWithExtraOptions(name string, cache, handles int, nam
 // also attaching a chain freezer to it that moves ancient chain data from the
 // database to immutable append-only files. If the node is an ephemeral one, a
 // memory database is returned.
-func (n *Node) OpenDatabaseWithFreezer(name string, cache, handles int, ancient string, namespace string, readonly bool) (ethdb.Database, error) {
-	return n.OpenDatabaseWithFreezerWithExtraOptions(name, cache, handles, ancient, namespace, readonly, nil)
+func (n *Node) OpenDatabaseWithFreezer(name string, cache, handles int, ancient string, namespace string, readonly bool, initState bool) (ethdb.Database, error) {
+	return n.OpenDatabaseWithFreezerWithExtraOptions(name, cache, handles, ancient, namespace, readonly, initState, nil)
 }
 
-func (n *Node) OpenDatabaseWithFreezerWithExtraOptions(name string, cache, handles int, ancient string, namespace string, readonly bool, pebbleExtraOptions *pebble.ExtraOptions) (ethdb.Database, error) {
+func (n *Node) OpenDatabaseWithFreezerWithExtraOptions(name string, cache, handles int, ancient string, namespace string, readonly bool, initState bool, pebbleExtraOptions *pebble.ExtraOptions) (ethdb.Database, error) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if n.state == closedState {
@@ -808,6 +808,7 @@ func (n *Node) OpenDatabaseWithFreezerWithExtraOptions(name string, cache, handl
 			Handles:            handles,
 			ReadOnly:           readonly,
 			PebbleExtraOptions: pebbleExtraOptions,
+			InInitState:        initState,
 		})
 	}
 	if err == nil {
