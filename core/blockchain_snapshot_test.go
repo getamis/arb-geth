@@ -69,6 +69,7 @@ func (basic *snapshotTestBasic) prepare(t *testing.T) (*BlockChain, []*types.Blo
 		Directory:         datadir,
 		AncientsDirectory: ancient,
 		Ephemeral:         true,
+		InInitState:       false,
 	})
 	if err != nil {
 		t.Fatalf("Failed to create persistent database: %v", err)
@@ -260,6 +261,7 @@ func (snaptest *crashSnapshotTest) test(t *testing.T) {
 		Directory:         snaptest.datadir,
 		AncientsDirectory: snaptest.ancient,
 		Ephemeral:         true,
+		InInitState:       false,
 	})
 	if err != nil {
 		t.Fatalf("Failed to reopen persistent database: %v", err)
