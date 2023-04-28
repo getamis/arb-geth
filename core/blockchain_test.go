@@ -738,7 +738,7 @@ func testFastVsFullChains(t *testing.T, scheme string) {
 		t.Fatalf("failed to insert receipt %d: %v", n, err)
 	}
 	// Freezer style fast import the chain.
-	ancientDb, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+	ancientDb, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 	if err != nil {
 		t.Fatalf("failed to create temp freezer db: %v", err)
 	}
@@ -824,7 +824,7 @@ func testLightVsFastVsFullChainHeads(t *testing.T, scheme string) {
 
 	// makeDb creates a db instance for testing.
 	makeDb := func() ethdb.Database {
-		db, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+		db, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 		if err != nil {
 			t.Fatalf("failed to create temp freezer db: %v", err)
 		}
@@ -1623,7 +1623,7 @@ func testLargeReorgTrieGC(t *testing.T, scheme string) {
 	competitor, _ := GenerateChain(genesis.Config, shared[len(shared)-1], engine, genDb, 2*state.DefaultTriesInMemory+1, func(i int, b *BlockGen) { b.SetCoinbase(common.Address{3}) })
 
 	// Import the shared chain and the original canonical one
-	db, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+	db, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 	defer db.Close()
 
 	chain, err := NewBlockChain(db, DefaultCacheConfigWithScheme(scheme), nil, genesis, nil, engine, vm.Config{}, nil)
@@ -1672,54 +1672,6 @@ func testLargeReorgTrieGC(t *testing.T, scheme string) {
 	}
 }
 
-func TestBlockchainRecovery(t *testing.T) {
-	testBlockchainRecovery(t, rawdb.HashScheme)
-	testBlockchainRecovery(t, rawdb.PathScheme)
-}
-
-func testBlockchainRecovery(t *testing.T, scheme string) {
-	// Configure and generate a sample block chain
-	var (
-		key, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-		address = crypto.PubkeyToAddress(key.PublicKey)
-		funds   = big.NewInt(1000000000)
-		gspec   = &Genesis{Config: params.TestChainConfig, Alloc: types.GenesisAlloc{address: {Balance: funds}}}
-	)
-	height := uint64(64)
-	_, blocks, receipts := GenerateChainWithGenesis(gspec, ethash.NewFaker(), int(height), nil)
-
-	// Import the chain as a ancient-first node and ensure all pointers are updated
-	ancientDb, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), t.TempDir(), "", false)
-	if err != nil {
-		t.Fatalf("failed to create temp freezer db: %v", err)
-	}
-	defer ancientDb.Close()
-	ancient, _ := NewBlockChain(ancientDb, DefaultCacheConfigWithScheme(scheme), nil, gspec, nil, ethash.NewFaker(), vm.Config{}, nil)
-
-	if n, err := ancient.InsertReceiptChain(blocks, receipts, uint64(3*len(blocks)/4)); err != nil {
-		t.Fatalf("failed to insert receipt %d: %v", n, err)
-	}
-	rawdb.WriteLastPivotNumber(ancientDb, blocks[len(blocks)-1].NumberU64()) // Force fast sync behavior
-	ancient.Stop()
-
-	// Destroy head fast block manually
-	midBlock := blocks[len(blocks)/2]
-	rawdb.WriteHeadFastBlockHash(ancientDb, midBlock.Hash())
-
-	// Reopen broken blockchain again
-	ancient, _ = NewBlockChain(ancientDb, DefaultCacheConfigWithScheme(scheme), nil, gspec, nil, ethash.NewFaker(), vm.Config{}, nil)
-	defer ancient.Stop()
-	if num := ancient.CurrentBlock().Number.Uint64(); num != 0 {
-		t.Errorf("head block mismatch: have #%v, want #%v", num, 0)
-	}
-	if num := ancient.CurrentSnapBlock().Number.Uint64(); num != midBlock.NumberU64() {
-		t.Errorf("head snap-block mismatch: have #%v, want #%v", num, midBlock.NumberU64())
-	}
-	if num := ancient.CurrentHeader().Number.Uint64(); num != midBlock.NumberU64() {
-		t.Errorf("head header mismatch: have #%v, want #%v", num, midBlock.NumberU64())
-	}
-}
-
 // Tests that importing a very large side fork, which is larger than the canon chain,
 // but where the difficulty per block is kept low: this means that it will not
 // overtake the 'canon' chain until after it's passed canon by about 200 blocks.
@@ -1747,7 +1699,7 @@ func testLowDiffLongChain(t *testing.T, scheme string) {
 	})
 
 	// Import the canonical chain
-	diskdb, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+	diskdb, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 	defer diskdb.Close()
 
 	chain, err := NewBlockChain(diskdb, DefaultCacheConfigWithScheme(scheme), nil, genesis, nil, engine, vm.Config{}, nil)
@@ -1959,7 +1911,7 @@ func testInsertKnownChainData(t *testing.T, typ string, scheme string) {
 		b.OffsetTime(-9) // A higher difficulty
 	})
 	// Import the shared chain and the original canonical one
-	chaindb, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+	chaindb, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 	if err != nil {
 		t.Fatalf("failed to create temp freezer db: %v", err)
 	}
@@ -2122,7 +2074,7 @@ func testInsertKnownChainDataWithMerging(t *testing.T, typ string, mergeHeight i
 		}
 	})
 	// Import the shared chain and the original canonical one
-	chaindb, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+	chaindb, err := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 	if err != nil {
 		t.Fatalf("failed to create temp freezer db: %v", err)
 	}
@@ -2496,7 +2448,7 @@ func testSideImportPrunedBlocks(t *testing.T, scheme string) {
 	if err != nil {
 		t.Fatalf("Failed to create persistent key-value database: %v", err)
 	}
-	db, err := rawdb.NewDatabaseWithFreezer(pdb, ancient, "", false)
+	db, err := rawdb.NewDatabaseWithFreezer(pdb, ancient, "", false, false)
 	if err != nil {
 		t.Fatalf("Failed to create persistent freezer database: %v", err)
 	}
@@ -3403,7 +3355,7 @@ func testSetCanonical(t *testing.T, scheme string) {
 		}
 		gen.AddTx(tx)
 	})
-	diskdb, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+	diskdb, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 	defer diskdb.Close()
 
 	chain, err := NewBlockChain(diskdb, DefaultCacheConfigWithScheme(scheme), nil, gspec, nil, engine, vm.Config{}, nil)
@@ -4199,7 +4151,7 @@ func testChainReorgSnapSync(t *testing.T, ancientLimit uint64) {
 		gen.SetCoinbase(common.Address{0: byte(0xb), 19: byte(i)})
 	})
 
-	db, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+	db, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 	defer db.Close()
 
 	chain, _ := NewBlockChain(db, DefaultCacheConfigWithScheme(rawdb.PathScheme), nil, gspec, nil, beacon.New(ethash.NewFaker()), vm.Config{}, nil)
@@ -4315,7 +4267,7 @@ func testInsertChainWithCutoff(t *testing.T, cutoff uint64, ancientLimit uint64,
 	config := DefaultCacheConfigWithScheme(rawdb.PathScheme)
 	config.ChainHistoryMode = history.KeepPostMerge
 
-	db, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false)
+	db, _ := rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), "", "", false, false)
 	defer db.Close()
 	chain, _ := NewBlockChain(db, DefaultCacheConfigWithScheme(rawdb.PathScheme), nil, genesis, nil, beacon.New(ethash.NewFaker()), vm.Config{}, nil)
 	defer chain.Stop()

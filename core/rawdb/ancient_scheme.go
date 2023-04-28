@@ -52,6 +52,13 @@ var chainFreezerTableConfigs = map[string]freezerTableConfig{
 	ChainFreezerTransferLogTable: {noSnappy: false, prunable: true},
 }
 
+var chainFreezerTableConfigsWithoutTransfers = map[string]freezerTableConfig{
+	ChainFreezerHeaderTable:  {noSnappy: false, prunable: false},
+	ChainFreezerHashTable:    {noSnappy: true, prunable: false},
+	ChainFreezerBodiesTable:  {noSnappy: false, prunable: true},
+	ChainFreezerReceiptTable: {noSnappy: false, prunable: true},
+}
+
 // freezerTableConfig contains the settings for a freezer table.
 type freezerTableConfig struct {
 	noSnappy bool // disables item compression
