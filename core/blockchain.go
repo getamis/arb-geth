@@ -2943,7 +2943,12 @@ func (bc *BlockChain) InsertHeadersBeforeCutoff(headers []*types.Header) (int, e
 		first     = headers[0].Number.Uint64()
 	)
 	if first == 1 && frozen == 0 {
-		_, err := rawdb.WriteAncientBlocks(bc.db, []*types.Block{bc.genesisBlock}, []rlp.RawValue{rlp.EmptyList}, [][]*types.TransferLog{{}})
+		b := bc.genesisBlock
+		tfLogs, err := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen, false)
+		if err != nil {
+			return 0, err
+		}
+		_, err = rawdb.WriteAncientBlocks(bc.db, []*types.Block{bc.genesisBlock}, []rlp.RawValue{rlp.EmptyList}, [][]*types.TransferLog{tfLogs})
 		if err != nil {
 			log.Error("Error writing genesis to ancients", "err", err)
 			return 0, err

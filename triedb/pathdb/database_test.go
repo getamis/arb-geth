@@ -174,7 +174,7 @@ func (c *testerConfig) writeBufferSize() int {
 
 func newTester(t *testing.T, config *testerConfig) *tester {
 	var (
-		disk, _ = rawdb.Open(rawdb.NewMemoryDatabase(), rawdb.OpenOptions{Ancient: t.TempDir()})
+		disk, _ = rawdb.Open(rawdb.NewMemoryDatabase(), rawdb.OpenOptions{Ancient: t.TempDir()}, false)
 		db      = New(disk, &Config{
 			StateHistory:        config.stateHistory,
 			EnableStateIndexing: config.enableIndex,

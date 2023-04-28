@@ -223,7 +223,7 @@ func (tracker *TxTracker) loop() {
 			timer.Reset(recheckInterval)
 		case <-pendingLocalTxs.C:
 			lTxs := types.Transactions{}
-			for addr, lazyTxs := range tracker.pool.Pending(txpool.PendingFilter{OnlyPlainTxs: true}) {
+			for addr, lazyTxs := range tracker.pool.Pending(txpool.PendingFilter{}) {
 				if _, ok := tracker.byAddr[addr]; !ok {
 					continue
 				}
