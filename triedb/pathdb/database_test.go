@@ -101,7 +101,7 @@ type tester struct {
 
 func newTester(t *testing.T, historyLimit uint64) *tester {
 	var (
-		disk, _ = rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), t.TempDir(), "", false)
+		disk, _ = rawdb.NewDatabaseWithFreezer(rawdb.NewMemoryDatabase(), t.TempDir(), "", false, false)
 		db      = New(disk, &Config{
 			StateHistory:   historyLimit,
 			CleanCacheSize: 16 * 1024,

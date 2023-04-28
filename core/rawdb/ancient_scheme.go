@@ -55,6 +55,14 @@ var chainFreezerNoSnappy = map[string]bool{
 	ChainFreezerTransferLogTable: false,
 }
 
+var chainFreezerNoSnappyWithoutTransfers = map[string]bool{
+	ChainFreezerHeaderTable:     false,
+	ChainFreezerHashTable:       true,
+	ChainFreezerBodiesTable:     false,
+	ChainFreezerReceiptTable:    false,
+	ChainFreezerDifficultyTable: true,
+}
+
 const (
 	// stateHistoryTableSize defines the maximum size of freezer data files.
 	stateHistoryTableSize = 2 * 1000 * 1000 * 1000

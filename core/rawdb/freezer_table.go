@@ -120,6 +120,10 @@ type freezerTable struct {
 	lock   sync.RWMutex // Mutex protecting the data file descriptors
 }
 
+func InitFreezerTransfersTable(datadir string) (*freezerTable, error) {
+	return newFreezerTable(datadir, ChainFreezerTransferLogTable, false, false)
+}
+
 // newFreezerTable opens the given path as a freezer table.
 func newFreezerTable(path, name string, disableSnappy, readonly bool) (*freezerTable, error) {
 	return newTable(path, name, metrics.NilMeter{}, metrics.NilMeter{}, metrics.NilGauge{}, freezerTableSize, disableSnappy, readonly)

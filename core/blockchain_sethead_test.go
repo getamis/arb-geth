@@ -1972,6 +1972,7 @@ func testSetHeadWithScheme(t *testing.T, tt *rewindTest, snapshots bool, scheme 
 		Directory:         datadir,
 		AncientsDirectory: ancient,
 		Ephemeral:         true,
+		InInitState:       false,
 	})
 	if err != nil {
 		t.Fatalf("Failed to create persistent database: %v", err)
