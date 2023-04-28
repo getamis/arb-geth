@@ -70,6 +70,13 @@ var stateFreezerNoSnappy = map[string]bool{
 	stateHistoryAccountData:  false,
 	stateHistoryStorageData:  false,
 }
+var chainFreezerNoSnappyWithoutTransfers = map[string]bool{
+	ChainFreezerHeaderTable:     false,
+	ChainFreezerHashTable:       true,
+	ChainFreezerBodiesTable:     false,
+	ChainFreezerReceiptTable:    false,
+	ChainFreezerDifficultyTable: true,
+}
 
 // The list of identifiers of ancient stores.
 var (

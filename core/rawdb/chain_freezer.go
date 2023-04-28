@@ -52,8 +52,8 @@ type chainFreezer struct {
 }
 
 // newChainFreezer initializes the freezer for ancient chain data.
-func newChainFreezer(datadir string, namespace string, readonly bool) (*chainFreezer, error) {
-	freezer, err := NewChainFreezer(datadir, namespace, readonly)
+func newChainFreezer(datadir string, namespace string, readonly bool, inInitState bool) (*chainFreezer, error) {
+	freezer, err := NewChainFreezer(datadir, namespace, readonly, inInitState)
 	if err != nil {
 		return nil, err
 	}
