@@ -77,8 +77,16 @@ type Freezer struct {
 
 // NewChainFreezer is a small utility method around NewFreezer that sets the
 // default parameters for the chain storage.
-func NewChainFreezer(datadir string, namespace string, readonly bool) (*Freezer, error) {
-	return NewFreezer(datadir, namespace, readonly, freezerTableSize, chainFreezerNoSnappy)
+func NewChainFreezer(datadir string, namespace string, readonly bool, inInitState bool) (*Freezer, error) {
+	tables := chainFreezerNoSnappy
+	if inInitState {
+		tables = chainFreezerNoSnappyWithoutTransfers
+	}
+	return NewFreezer(datadir, namespace, readonly, freezerTableSize, tables)
+}
+
+func InitFreezerTransfersTable(datadir string) (*freezerTable, error) {
+	return newFreezerTable(datadir, ChainFreezerTransferLogTable, false, false)
 }
 
 // NewFreezer creates a freezer instance for maintaining immutable ordered
