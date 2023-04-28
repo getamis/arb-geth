@@ -38,6 +38,8 @@ type OpenOptions struct {
 	ReadOnly          bool
 
 	PebbleExtraOptions *pebble.ExtraOptions
+
+	InInitState bool
 }
 
 // OpenDatabase opens both a disk-based key-value database such as leveldb or pebble, but also
@@ -53,7 +55,7 @@ func OpenDatabase(o OpenOptions) (ethdb.Database, error) {
 	if len(o.AncientsDirectory) == 0 {
 		return kvdb, nil
 	}
-	frdb, err := rawdb.NewDatabaseWithFreezer(kvdb, o.AncientsDirectory, o.Namespace, o.ReadOnly)
+	frdb, err := rawdb.NewDatabaseWithFreezer(kvdb, o.AncientsDirectory, o.Namespace, o.ReadOnly, o.InInitState)
 	if err != nil {
 		kvdb.Close()
 		return nil, err
