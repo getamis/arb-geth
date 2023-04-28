@@ -1768,6 +1768,7 @@ func testRepairWithScheme(t *testing.T, tt *rewindTest, snapshots bool, scheme s
 		Directory:         datadir,
 		AncientsDirectory: ancient,
 		Ephemeral:         true,
+		InInitState:       false,
 	})
 	if err != nil {
 		t.Fatalf("Failed to create persistent database: %v", err)
@@ -1857,6 +1858,7 @@ func testRepairWithScheme(t *testing.T, tt *rewindTest, snapshots bool, scheme s
 		Directory:         datadir,
 		AncientsDirectory: ancient,
 		Ephemeral:         true,
+		InInitState:       false,
 	})
 	if err != nil {
 		t.Fatalf("Failed to reopen persistent database: %v", err)
@@ -1921,6 +1923,7 @@ func testIssue23496(t *testing.T, scheme string) {
 	db, err := rawdb.Open(rawdb.OpenOptions{
 		Directory:         datadir,
 		AncientsDirectory: ancient,
+		InInitState:       false,
 	})
 	if err != nil {
 		t.Fatalf("Failed to create persistent database: %v", err)
@@ -1979,6 +1982,7 @@ func testIssue23496(t *testing.T, scheme string) {
 		Directory:         datadir,
 		AncientsDirectory: ancient,
 		Ephemeral:         true,
+		InInitState:       false,
 	})
 	if err != nil {
 		t.Fatalf("Failed to reopen persistent database: %v", err)
