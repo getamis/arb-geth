@@ -60,7 +60,7 @@ type chainFreezer struct {
 //     state freezer (e.g. dev mode).
 //   - if non-empty directory is given, initializes the regular file-based
 //     state freezer.
-func newChainFreezer(datadir string, eraDir string, namespace string, readonly bool) (*chainFreezer, error) {
+func newChainFreezer(datadir string, eraDir string, namespace string, readonly bool, initState bool) (*chainFreezer, error) {
 	if datadir == "" {
 		return &chainFreezer{
 			ancients: NewMemoryFreezer(readonly, chainFreezerTableConfigs),
@@ -68,7 +68,19 @@ func newChainFreezer(datadir string, eraDir string, namespace string, readonly b
 			trigger:  make(chan chan struct{}),
 		}, nil
 	}
-	freezer, err := NewFreezer(datadir, namespace, readonly, freezerTableSize, chainFreezerTableConfigs)
+	var (
+		err     error
+		freezer ethdb.AncientStore
+	)
+	tables := chainFreezerTableConfigs
+	if initState {
+		tables = chainFreezerTableConfigsWithoutTransfers
+	}
+	if datadir == "" {
+		freezer = NewMemoryFreezer(readonly, tables)
+	} else {
+		freezer, err = NewFreezer(datadir, namespace, readonly, freezerTableSize, tables)
+	}
 	if err != nil {
 		return nil, err
 	}

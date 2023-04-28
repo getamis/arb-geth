@@ -42,6 +42,7 @@ type DatabaseOptions struct {
 
 	PebbleExtraOptions *pebble.ExtraOptions
 	NoFreezer          bool
+	InInitState        bool
 }
 
 type InternalOpenOptions struct {
@@ -68,6 +69,7 @@ func OpenDatabase(o InternalOpenOptions) (ethdb.Database, error) {
 		Era:              o.EraDirectory,
 		MetricsNamespace: o.MetricsNamespace,
 		ReadOnly:         o.ReadOnly,
+		InInitState:      o.InInitState,
 	}
 	frdb, err := rawdb.Open(kvdb, opts)
 	if err != nil {

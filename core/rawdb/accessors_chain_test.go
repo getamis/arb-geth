@@ -482,7 +482,7 @@ func TestAncientStorage(t *testing.T) {
 func TestAncientTransferLogStorageTransferLog(t *testing.T) {
 	// Freezer style fast import the chain.
 	frdir := t.TempDir()
-	db, err := NewDatabaseWithFreezer(NewMemoryDatabase(), frdir, "", false)
+	db, err := NewDatabaseWithFreezer(NewMemoryDatabase(), frdir, "", false, false)
 	if err != nil {
 		t.Fatalf("failed to create database with ancient backend")
 	}
