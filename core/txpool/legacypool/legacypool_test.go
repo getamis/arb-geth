@@ -455,7 +455,7 @@ func TestSubscribePendingAndQueuedTransactions(t *testing.T) {
 	blockchain := newTestBlockChain(params.TestChainConfig, 10000000, statedb, new(event.Feed))
 
 	pool := New(testTxPoolConfig, blockchain)
-	pool.Init(testTxPoolConfig.PriceLimit, blockchain.CurrentBlock(), makeAddressReserver())
+	pool.Init(testTxPoolConfig.PriceLimit, blockchain.CurrentBlock(), newReserver())
 	defer pool.Close()
 
 	// Keep listening for authenticated transactions.

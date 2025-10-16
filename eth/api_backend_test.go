@@ -75,7 +75,7 @@ func initBackend(withLocal bool) *EthAPIBackend {
 		txPool:     txpool,
 	}
 	if withLocal {
-		eth.localTxTracker = locals.New("", time.Minute, gspec.Config, txpool)
+		eth.localTxTracker = locals.New("", time.Minute, gspec.Config, txpool, 10*time.Second)
 	}
 	return &EthAPIBackend{
 		eth: eth,

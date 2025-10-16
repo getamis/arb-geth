@@ -30,6 +30,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/filtermaps"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -419,5 +420,17 @@ func (b *backendMock) SyncProgressMap(ctx context.Context) map[string]interface{
 }
 
 func (b *backendMock) SubscribeNewQueuedTxsEvent(ch chan<- core.NewQueuedTxsEvent) event.Subscription {
+	return nil
+}
+
+func (b *backendMock) CurrentView() *filtermaps.ChainView {
+	return nil
+}
+
+func (b *backendMock) HistoryPruningCutoff() uint64 {
+	return 0
+}
+
+func (b *backendMock) NewMatcherBackend() filtermaps.MatcherBackend {
 	return nil
 }
