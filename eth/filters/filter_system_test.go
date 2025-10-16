@@ -386,7 +386,7 @@ func TestQueuedTxFilter(t *testing.T) {
 
 	var (
 		db           = rawdb.NewMemoryDatabase()
-		backend, sys = newTestFilterSystem(t, db, Config{})
+		backend, sys = newTestFilterSystem(db, Config{})
 		api          = NewFilterAPI(sys)
 
 		transactions = []*types.Transaction{
