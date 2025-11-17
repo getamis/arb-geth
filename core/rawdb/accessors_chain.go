@@ -888,6 +888,9 @@ func WriteAncientHeaderChain(db ethdb.AncientWriter, headers []*types.Header) (i
 			if err := op.AppendRaw(ChainFreezerReceiptTable, num, nil); err != nil {
 				return fmt.Errorf("can't append block %d receipts: %v", num, err)
 			}
+			if err := op.AppendRaw(ChainFreezerTransferLogTable, num, nil); err != nil {
+				return fmt.Errorf("can't append block %d transfer logs: %v", num, err)
+			}
 		}
 		return nil
 	})
