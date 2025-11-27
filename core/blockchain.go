@@ -1538,7 +1538,12 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 		// Ensure genesis is in the ancient store
 		if blockChain[0].NumberU64() == 1 {
 			if frozen, _ := bc.db.Ancients(); frozen == 0 {
-				writeSize, err := rawdb.WriteAncientBlocks(bc.db, []*types.Block{bc.genesisBlock}, []rlp.RawValue{rlp.EmptyList})
+				b := bc.genesisBlock
+				tfLogs, err := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen, false)
+				if err != nil {
+					return 0, err
+				}
+				writeSize, err := rawdb.WriteAncientBlocks(bc.db, []*types.Block{bc.genesisBlock}, []rlp.RawValue{rlp.EmptyList}, [][]*types.TransferLog{tfLogs})
 				if err != nil {
 					log.Error("Error writing genesis to ancients", "err", err)
 					return 0, err
@@ -1547,8 +1552,16 @@ func (bc *BlockChain) InsertReceiptChain(blockChain types.Blocks, receiptChain [
 				log.Info("Wrote genesis to ancients")
 			}
 		}
+		tfLogss := [][]*types.TransferLog{}
+		for _, b := range blockChain {
+			tfLogs, err := rawdb.ReadTransferLogs(bc.db, b.Hash(), b.NumberU64(), false)
+			if err != nil {
+				return 0, err
+			}
+			tfLogss = append(tfLogss, tfLogs)
+		}
 		// Write all chain data to ancients.
-		writeSize, err := rawdb.WriteAncientBlocks(bc.db, blockChain, receiptChain)
+		writeSize, err := rawdb.WriteAncientBlocks(bc.db, blockChain, receiptChain, tfLogss)
 		if err != nil {
 			log.Error("Error importing chain data to ancients", "err", err)
 			return 0, err
@@ -2930,7 +2943,12 @@ func (bc *BlockChain) InsertHeadersBeforeCutoff(headers []*types.Header) (int, e
 		first     = headers[0].Number.Uint64()
 	)
 	if first == 1 && frozen == 0 {
-		_, err := rawdb.WriteAncientBlocks(bc.db, []*types.Block{bc.genesisBlock}, []rlp.RawValue{rlp.EmptyList})
+		b := bc.genesisBlock
+		tfLogs, err := rawdb.ReadTransferLogs(bc.db, b.Hash(), frozen, false)
+		if err != nil {
+			return 0, err
+		}
+		_, err = rawdb.WriteAncientBlocks(bc.db, []*types.Block{bc.genesisBlock}, []rlp.RawValue{rlp.EmptyList}, [][]*types.TransferLog{tfLogs})
 		if err != nil {
 			log.Error("Error writing genesis to ancients", "err", err)
 			return 0, err

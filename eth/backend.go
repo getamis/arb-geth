@@ -157,6 +157,8 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 		AncientsDirectory: config.DatabaseFreezer,
 		EraDirectory:      config.DatabaseEra,
 		MetricsNamespace:  "eth/db/chaindata/",
+		ReadOnly:          false,
+		InInitState:       false,
 	}
 	chainDb, err := stack.OpenDatabaseWithOptions("chaindata", dbOptions)
 	if err != nil {

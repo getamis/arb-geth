@@ -240,11 +240,12 @@ func resolveChainEraDir(chainFreezerDir string, era string) string {
 // can be opened.
 //
 // Deprecated: use Open.
-func NewDatabaseWithFreezer(db ethdb.KeyValueStore, ancient string, namespace string, readonly bool) (ethdb.Database, error) {
+func NewDatabaseWithFreezer(db ethdb.KeyValueStore, ancient string, namespace string, readonly bool, inInitState bool) (ethdb.Database, error) {
 	return Open(db, OpenOptions{
 		Ancient:          ancient,
 		MetricsNamespace: namespace,
 		ReadOnly:         readonly,
+		InInitState:      inInitState,
 	})
 }
 
@@ -254,6 +255,7 @@ type OpenOptions struct {
 	Era              string // era files directory
 	MetricsNamespace string // prefix added to freezer metric names
 	ReadOnly         bool
+	InInitState      bool
 }
 
 // Open creates a high-level database wrapper for the given key-value store.
@@ -265,7 +267,7 @@ func Open(db ethdb.KeyValueStore, opts OpenOptions) (ethdb.Database, error) {
 	if chainFreezerDir != "" {
 		chainFreezerDir = resolveChainFreezerDir(chainFreezerDir)
 	}
-	frdb, err := newChainFreezer(chainFreezerDir, opts.Era, opts.MetricsNamespace, opts.ReadOnly)
+	frdb, err := newChainFreezer(chainFreezerDir, opts.Era, opts.MetricsNamespace, opts.ReadOnly, opts.InInitState)
 	if err != nil {
 		printChainMetadata(db)
 		return nil, err

@@ -35,6 +35,9 @@ const (
 
 	// ChainFreezerReceiptTable indicates the name of the freezer receipts table.
 	ChainFreezerReceiptTable = "receipts"
+
+	// ChainFreezerTransferLogTable indicates the name of the freezer transfer logs table.
+	ChainFreezerTransferLogTable = "transfers"
 )
 
 // chainFreezerTableConfigs configures the settings for tables in the chain freezer.
@@ -42,6 +45,14 @@ const (
 // tail truncation is disabled for the header and hash tables, as these are intended
 // to be retained long-term.
 var chainFreezerTableConfigs = map[string]freezerTableConfig{
+	ChainFreezerHeaderTable:      {noSnappy: false, prunable: false},
+	ChainFreezerHashTable:        {noSnappy: true, prunable: false},
+	ChainFreezerBodiesTable:      {noSnappy: false, prunable: true},
+	ChainFreezerReceiptTable:     {noSnappy: false, prunable: true},
+	ChainFreezerTransferLogTable: {noSnappy: false, prunable: true},
+}
+
+var chainFreezerTableConfigsWithoutTransfers = map[string]freezerTableConfig{
 	ChainFreezerHeaderTable:  {noSnappy: false, prunable: false},
 	ChainFreezerHashTable:    {noSnappy: true, prunable: false},
 	ChainFreezerBodiesTable:  {noSnappy: false, prunable: true},

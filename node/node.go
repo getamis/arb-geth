@@ -36,6 +36,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/ethdb/memorydb"
+	"github.com/ethereum/go-ethereum/ethdb/pebble"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p"
@@ -755,6 +756,7 @@ func (n *Node) OpenDatabaseWithOptions(name string, opt DatabaseOptions) (ethdb.
 		db, _ = rawdb.Open(memorydb.New(), rawdb.OpenOptions{
 			MetricsNamespace: opt.MetricsNamespace,
 			ReadOnly:         opt.ReadOnly,
+			InInitState:      opt.InInitState,
 		})
 	} else {
 		opt.AncientsDirectory = n.ResolveAncient(name, opt.AncientsDirectory)
@@ -787,14 +789,28 @@ func (n *Node) OpenDatabase(name string, cache, handles int, namespace string, r
 // creates one if no previous can be found) from within the node's data directory.
 // If the node has no data directory, an in-memory database is returned.
 // Deprecated: use OpenDatabaseWithOptions instead.
-func (n *Node) OpenDatabaseWithFreezer(name string, cache, handles int, ancient string, namespace string, readonly bool) (ethdb.Database, error) {
-	return n.OpenDatabaseWithOptions(name, DatabaseOptions{
+func (n *Node) OpenDatabaseWithFreezer(name string, cache, handles int, ancient string, namespace string, readonly bool, initState bool) (ethdb.Database, error) {
+	return n.OpenDatabaseWithFreezerWithExtraOptions(name, cache, handles, ancient, namespace, readonly, initState, nil)
+}
+
+func (n *Node) OpenDatabaseWithFreezerWithExtraOptions(name string, cache, handles int, ancient string, namespace string, readonly bool, initState bool, pebbleExtraOptions *pebble.ExtraOptions) (ethdb.Database, error) {
+	n.lock.Lock()
+	defer n.lock.Unlock()
+	if n.state == closedState {
+		return nil, ErrNodeStopped
+	}
+	db, err := n.OpenDatabaseWithOptions(name, DatabaseOptions{
 		AncientsDirectory: n.ResolveAncient(name, ancient),
 		MetricsNamespace:  namespace,
 		Cache:             cache,
 		Handles:           handles,
 		ReadOnly:          readonly,
+		InInitState:       initState,
 	})
+	if err == nil {
+		db = n.wrapDatabase(db)
+	}
+	return db, err
 }
 
 // ResolvePath returns the absolute path of a resource in the instance directory.

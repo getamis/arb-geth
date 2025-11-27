@@ -60,7 +60,7 @@ type chainFreezer struct {
 //     state freezer (e.g. dev mode).
 //   - if non-empty directory is given, initializes the regular file-based
 //     state freezer.
-func newChainFreezer(datadir string, eraDir string, namespace string, readonly bool) (*chainFreezer, error) {
+func newChainFreezer(datadir string, eraDir string, namespace string, readonly bool, initState bool) (*chainFreezer, error) {
 	if datadir == "" {
 		return &chainFreezer{
 			ancients: NewMemoryFreezer(readonly, chainFreezerTableConfigs),
@@ -68,7 +68,19 @@ func newChainFreezer(datadir string, eraDir string, namespace string, readonly b
 			trigger:  make(chan chan struct{}),
 		}, nil
 	}
-	freezer, err := NewFreezer(datadir, namespace, readonly, freezerTableSize, chainFreezerTableConfigs)
+	var (
+		err     error
+		freezer ethdb.AncientStore
+	)
+	tables := chainFreezerTableConfigs
+	if initState {
+		tables = chainFreezerTableConfigsWithoutTransfers
+	}
+	if datadir == "" {
+		freezer = NewMemoryFreezer(readonly, tables)
+	} else {
+		freezer, err = NewFreezer(datadir, namespace, readonly, freezerTableSize, tables)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -327,6 +339,11 @@ func (f *chainFreezer) freezeRange(nfdb *nofreezedb, number, limit uint64) (hash
 			if len(receipts) == 0 {
 				return fmt.Errorf("block receipts missing, can't freeze block %d", number)
 			}
+			transferLogs := ReadTransferLogsRLP(nfdb, hash, number)
+			if len(transferLogs) == 0 {
+				log.Error("Block transfer logs missing, can't freeze", "number", number, "hash", hash)
+				break
+			}
 			// Write to the batch.
 			if err := op.AppendRaw(ChainFreezerHashTable, number, hash[:]); err != nil {
 				return fmt.Errorf("can't write hash to Freezer: %v", err)
@@ -339,6 +356,9 @@ func (f *chainFreezer) freezeRange(nfdb *nofreezedb, number, limit uint64) (hash
 			}
 			if err := op.AppendRaw(ChainFreezerReceiptTable, number, receipts); err != nil {
 				return fmt.Errorf("can't write receipts to Freezer: %v", err)
+			}
+			if err := op.AppendRaw(ChainFreezerTransferLogTable, number, transferLogs); err != nil {
+				return fmt.Errorf("can't write transfer logs to Freezer: %v", err)
 			}
 			hashes = append(hashes, hash)
 		}
